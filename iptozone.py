@@ -76,7 +76,7 @@ class IPtoZone():
             # The result data is put into the object data
             data = r.text
 
-            # parse the xml to get a key
+            # parse the xml to get a key using beatifulsoup that we imported for use
             soup = BS(data, "html.parser")
             # assign the value of the key to self.key
             self.key = str(soup.find('key').text)
