@@ -55,7 +55,7 @@ class IPtoZone():
             self.vrouter = 'DEFAULT VR'
 
         # If username was passed we will assign that to the username global variable, otherwise set to admin
-        if args.username:
+        if args.username and not args.key:
             self.username = args.username
             print('set username to {username}'.format(username=args.username))
         else:
