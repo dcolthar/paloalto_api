@@ -35,6 +35,7 @@ class IPtoZone():
             self.host = args.ip
             print('connecting to host {ip}'.format(ip=self.host))
         else:
+            print('connecting to host 127.0.0.1')
             self.host = '127.0.0.1'
 
         # If debug is set to 1, then additional print output will be performed
@@ -49,6 +50,7 @@ class IPtoZone():
             self.vrouter = args.vrouter
             print('vrouter to use is {vrouter}'.format(vrouter=self.vrouter))
         else:
+            print('vrouter to use is \'DEFAULT VR\'')
             self.vrouter = 'DEFAULT VR'
 
         # If username was passed we will assign that to the username global variable, otherwise set to admin
@@ -56,6 +58,7 @@ class IPtoZone():
             self.username = args.username
             print('set username to {username}'.format(username=args.username))
         else:
+            print('set username to admin')
             self.username = 'admin'
 
         # If a key was used we don't need to prompt for a username and password
@@ -73,7 +76,7 @@ class IPtoZone():
         '''
         # If we already have the key, no need to perform this
         if not self.key:
-            self.password = getpass.getpass()
+            self.password = getpass.getpass('Enter the password for username {user}:\n'.format(user=self.username))
 
     def getKey(self):
         '''
@@ -86,14 +89,23 @@ class IPtoZone():
             getKeyURL = 'https://{host}/api/?type=keygen&user={user}&password={password}'.format(
                 host=self.host, user=self.username, password=self.password
             )
-            r = requests.get(getKeyURL, verify=False)
-            # The result data is put into the object data
-            data = r.text
+            # Lets try to connect
+            try:
+                r = requests.get(getKeyURL, verify=False)
+                # The result data is put into the object data
+                data = r.text
 
-            # parse the xml to get a key using beatifulsoup that we imported for use
-            soup = BS(data, "html.parser")
-            # assign the value of the key to self.key
-            self.key = str(soup.find('key').text)
+                # parse the xml to get a key using beatifulsoup that we imported for use
+                soup = BS(data, "html.parser")
+                # assign the value of the key to self.key
+                self.key = str(soup.find('key').text)
+            # Catch the connection error first then any other after it
+            except requests.ConnectionError:
+                print('Failed to connect to the host at {ip}'.format(ip=self.host))
+                sys.exit(1)
+            except Exception as e:
+                print('An unknown error occurred when trying to connect to get the API key')
+                sys.exit(2)
 
 
     def getSystemInfo(self):
@@ -111,13 +123,22 @@ class IPtoZone():
                 'https://{host}/api/?type=op&cmd=<show><system><info></info></system></show>&key={key}'.format(
                     host=self.host, key=self.key
                 )
-            r = requests.get(getSystemInfoURL, verify=False)
-            # The result data is put into the object data
-            data = r.text
+            # Lets try to connect
+            try:
+                r = requests.get(getSystemInfoURL, verify=False)
+                # The result data is put into the object data
+                data = r.text
 
-            # Convert the xml to json, then print it out all perdy like
-            newdata = json.loads(json.dumps(xmltodict.parse(data)))
-            print(json.dumps(newdata, indent=2, sort_keys=True))
+                # Convert the xml to json, then print it out all perdy like
+                newdata = json.loads(json.dumps(xmltodict.parse(data)))
+                print(json.dumps(newdata, indent=2, sort_keys=True))
+            # Catch the connection error first then any other after it
+            except requests.ConnectionError:
+                print('Failed to connect to the host at {ip}'.format(ip=self.host))
+                sys.exit(1)
+            except Exception as e:
+                print('An unknown error occurred when trying to connect to get system info')
+                sys.exit(2)
 
 
     def testRouteLookup(self):
@@ -142,28 +163,38 @@ class IPtoZone():
                 '&key={key}'.format(
                     host=self.host, vrouter=self.vrouter, ip=ip, key=self.key
                 )
-                r = requests.get(testRouteLookupURL, verify=False)
-                # The result data is put into the object data
-                data = r.text
+                # Try to connect now
+                try:
+                    r = requests.get(testRouteLookupURL, verify=False)
+                    # The result data is put into the object data
+                    data = r.text
 
-                # Convert the xml to json, then print it out all perdy like
-                newdata = json.loads(json.dumps(xmltodict.parse(data)))
+                    # Convert the xml to json, then print it out all perdy like
+                    newdata = json.loads(json.dumps(xmltodict.parse(data)))
 
-                # If debugging print out all output
-                if self.debug == '1':
-                    print(json.dumps(newdata, indent=2, sort_keys=True))
+                    # If debugging print out all output
+                    if self.debug == '1':
+                        print(json.dumps(newdata, indent=2, sort_keys=True))
 
-                # This will assign the interface from the results
-                if self.debug == 1:
-                    print(newdata)
-                interface = newdata['response']['result']['interface']
+                    # This will assign the interface from the results
+                    if self.debug == 1:
+                        print(newdata)
+                    interface = newdata['response']['result']['interface']
 
-                # now we will resolve the interface to zone name by calling interfaceToZone
-                zone = self.interfaceToZone(interface=interface)
+                    # now we will resolve the interface to zone name by calling interfaceToZone
+                    zone = self.interfaceToZone(interface=interface)
 
-                print('The host {ip} is out interface {interface} in zone {zone}'.format(
-                    ip=ip, interface=interface, zone=zone
-                ))
+                    print('The host {ip} is out interface {interface} in zone {zone}'.format(
+                        ip=ip, interface=interface, zone=zone
+                    ))
+                # Catch the connection error first then any other after it
+                except requests.ConnectionError:
+                    print('Failed to connect to the host at {ip} to perform a FIB lookup for '
+                          'ip {iptolookup}'.format(ip=self.host, iptolookup=ip))
+                    continue
+                except Exception as e:
+                    print('An unknown error occurred when trying to do a FIB lookup for ip {ip}'.format(ip=ip))
+                    continue
 
     def interfaceToZone(self, interface=''):
         '''
@@ -179,26 +210,34 @@ class IPtoZone():
             if not interface:
                 print('You didn\'t pass me an interface name')
                 sys.exit(1)
+            # If we got here we were passed an interface and should be good to get the zone mapping
             else:
                 interfaceToZoneURL = \
                 'https://{host}/api/?type=op&cmd=<show><interface>{interface}</interface></show>&key={key}'.format(
                     host=self.host, interface=interface, key=self.key
                 )
-                r= requests.get(interfaceToZoneURL, verify=False)
-                data = r.text
+                # Lets try to connect now
+                try:
+                    r= requests.get(interfaceToZoneURL, verify=False)
+                    data = r.text
 
-                # Convert the xml to json, then print it out all perdy like
-                newdata = json.loads(json.dumps(xmltodict.parse(data)))
+                    # Convert the xml to json, then print it out all perdy like
+                    newdata = json.loads(json.dumps(xmltodict.parse(data)))
 
-                # If debugging print out all output
-                if self.debug == '1':
-                    print(json.dumps(newdata, indent=2, sort_keys=True))
+                    # If debugging print out all output
+                    if self.debug == '1':
+                        print(json.dumps(newdata, indent=2, sort_keys=True))
 
-                # This will assign the zone from the results
-                zone = newdata['response']['result']['ifnet']['zone']
+                    # This will assign the zone from the results
+                    zone = newdata['response']['result']['ifnet']['zone']
 
-                # return the zone
-                return zone
+                    # return the zone
+                    return zone
+                # Catch the connection error first then any other after it
+                except requests.ConnectionError:
+                    print('Failed to connect to the host at {ip} to perform an interface to zone lookup')
+                except Exception as e:
+                    print('An unknown error occurred when trying to do an interface to zone lookup')
 
 
 
