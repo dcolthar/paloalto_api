@@ -68,6 +68,9 @@ class IPtoZone():
         else:
             self.key = ''
 
+        # Dictionary to hold IP key to zone value
+        self.results = {}
+
 
     def getCredentials(self):
         '''
@@ -111,7 +114,7 @@ class IPtoZone():
     def getSystemInfo(self):
         '''
         Simple query to pull system info from the firewall
-        :return:
+        :return: newdata - a json object of the system results from the API query
         '''
         # If we don't have the key, no point to continue
         if not self.key:
@@ -131,7 +134,9 @@ class IPtoZone():
 
                 # Convert the xml to json, then print it out all perdy like
                 newdata = json.loads(json.dumps(xmltodict.parse(data)))
-                print(json.dumps(newdata, indent=2, sort_keys=True))
+                if self.debug == 1:
+                    print(json.dumps(newdata, indent=2, sort_keys=True))
+                return newdata
             # Catch the connection error first then any other after it
             except requests.ConnectionError:
                 print('Failed to connect to the host at {ip}'.format(ip=self.host))
@@ -145,7 +150,7 @@ class IPtoZone():
         '''
         Takes an ip and finds the output interface then calls interfaceToZone to resolve
         interface to zone name for the ip
-        :return:
+        :return: self.results - a dictionary of all the ip to zone mapping, the ip is the key zone the value
         '''
         # run against a group of routes to check at once
         iplist = ['10.92.53.39', '10.96.5.19']
@@ -184,9 +189,13 @@ class IPtoZone():
                     # now we will resolve the interface to zone name by calling interfaceToZone
                     zone = self.interfaceToZone(interface=interface)
 
-                    print('The host {ip} is out interface {interface} in zone {zone}'.format(
-                        ip=ip, interface=interface, zone=zone
-                    ))
+                    # add the ip and zone to the results dictionary
+                    self.results[ip] = zone
+
+                    if self.debug == 1:
+                        print('The host {ip} is out interface {interface} in zone {zone}'.format(
+                            ip=ip, interface=interface, zone=zone
+                        ))
                 # Catch the connection error first then any other after it
                 except requests.ConnectionError:
                     print('Failed to connect to the host at {ip} to perform a FIB lookup for '
@@ -196,11 +205,14 @@ class IPtoZone():
                     print('An unknown error occurred when trying to do a FIB lookup for ip {ip}'.format(ip=ip))
                     continue
 
+            # Return the results dictionary
+            return self.results
+
     def interfaceToZone(self, interface=''):
         '''
         takes an interface name from a call and returns the zone name
         :param interface:
-        :return:
+        :return: zone - the zone the interface that was provided is mapped to
         '''
         # If we don't have the key, no point to continue
         if not self.key:
@@ -248,4 +260,5 @@ iptozone.getCredentials()
 iptozone.getKey()
 print(iptozone.key)
 #iptozone.getSystemInfo()
-iptozone.testRouteLookup()
+results = iptozone.testRouteLookup()
+print(results)
