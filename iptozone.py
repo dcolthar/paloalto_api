@@ -58,7 +58,7 @@ class IPtoZone():
         if args.username and not args.key:
             self.username = args.username
             print('set username to {username}'.format(username=args.username))
-        else:
+        elif not args.key:
             print('set username to admin')
             self.username = 'admin'
 
