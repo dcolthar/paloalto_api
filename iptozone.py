@@ -23,10 +23,11 @@ class IPtoZone():
         parser = argparse.ArgumentParser(description='Map IP Routes to Zones on PaloAlto firewalls')
         parser.add_argument('-d', '--debug', choices=['0','1'],
                             help='set debug level, 0 is default 1 is debug on')
-        parser.add_argument('-k', '--key', help='pass an api key instead of authenticating')
+        parser.add_argument('-k', '--key', help='pass an api key instead of authenticating with username/password')
         parser.add_argument('-u', '--username', help='if not passing a key, enter a username to use')
         parser.add_argument('-i', '--ip', help='the ip of the host to connect to, '
                                                'will default to 127.0.0.1 with no input!')
+        parser.add_argument('-r', '--vrouter', help='the virtual router to use for lookup, default is DEFAULT VR')
         args = parser.parse_args()
 
         # If the hostname arg was passed, otherwise its going to 127.0.0.1 so will fail
@@ -40,6 +41,15 @@ class IPtoZone():
         if args.debug:
             self.debug = args.debug
             print('debug level set to {level}'.format(level=args.debug))
+        else:
+            self.debug = 0
+
+        # If vrouter arg was passed, otherwise set to default of DEFAULT VR
+        if args.vrouter:
+            self.vrouter = args.vrouter
+            print('vrouter to use is {vrouter}'.format(vrouter=self.vrouter))
+        else:
+            self.vrouter = 'DEFAULT VR'
 
         # If username was passed we will assign that to the username global variable, otherwise set to admin
         if args.username:
@@ -48,8 +58,12 @@ class IPtoZone():
         else:
             self.username = 'admin'
 
-
-        self.key = ''
+        # If a key was used we don't need to prompt for a username and password
+        if args.key:
+            self.key = args.key
+            print('we got a key passed to us so using that instead of username/password prompt')
+        else:
+            self.key = ''
 
 
     def getCredentials(self):
@@ -113,8 +127,7 @@ class IPtoZone():
         :return:
         '''
         # run against a group of routes to check at once
-        iplist = ['172.16.40.1', '172.16.1.1', '8.8.8.8']
-        vrouter = 'DEFAULT VR'
+        iplist = ['10.92.53.39', '10.96.5.19']
         # If we don't have the key, no point to continue
         if not self.key:
             print('We don\'t have an API key so the call will fail')
@@ -127,7 +140,7 @@ class IPtoZone():
                 'https://{host}/api/?type=op&cmd=<test><routing><fib-lookup>' \
                 '<virtual-router>{vrouter}</virtual-router><ip>{ip}</ip></fib-lookup></routing></test>' \
                 '&key={key}'.format(
-                    host=self.host, vrouter=vrouter, ip=ip, key=self.key
+                    host=self.host, vrouter=self.vrouter, ip=ip, key=self.key
                 )
                 r = requests.get(testRouteLookupURL, verify=False)
                 # The result data is put into the object data
@@ -141,6 +154,8 @@ class IPtoZone():
                     print(json.dumps(newdata, indent=2, sort_keys=True))
 
                 # This will assign the interface from the results
+                if self.debug == 1:
+                    print(newdata)
                 interface = newdata['response']['result']['interface']
 
                 # now we will resolve the interface to zone name by calling interfaceToZone
