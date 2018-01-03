@@ -82,10 +82,11 @@ class IPtoZone():
         if not self.key:
             self.password = getpass.getpass('Enter the password for username {user}:\n'.format(user=self.username))
 
+
     def getKey(self):
         '''
         getKey will get an API key if one is not provided for the username/password combo
-        :return:
+        :return: self.key  - the api key for future use
         '''
         if not self.key:
             # If we didn't get an api key from another method we need to obtain one
@@ -103,6 +104,10 @@ class IPtoZone():
                 soup = BS(data, "html.parser")
                 # assign the value of the key to self.key
                 self.key = str(soup.find('key').text)
+
+                # return the api key
+                return self.key
+
             # Catch the connection error first then any other after it
             except requests.ConnectionError:
                 print('Failed to connect to the host at {ip}'.format(ip=self.host))
