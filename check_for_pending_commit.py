@@ -38,11 +38,10 @@ class CheckForCommit():
 
         if newdata['response']['result'] == 'yes':
             commit_state = True
-            return commit_state
-
             # Try to get a summary of the changes that are awaiting commit
             changes = self.showPendingChanges()
             print(changes)
+            return commit_state
         else:
             commit_state = False
             return commit_state
