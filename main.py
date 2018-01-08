@@ -88,13 +88,8 @@ class Main():
 
         # Check if we should look for pending changes
         if args.checkcommit == 'yes':
-            check_commit = check_for_pending_commit.CheckForCommit(host=self.host, key=self.key)
-            if check_commit == True:
-                changes = check_commit.showPendingChanges()
-                print('Changes are pending commit:')
-                print(json.dumps(changes, indent=2, sort_keys=True))
-            if check_commit == False:
-                print('No changes are pending commit')
+            self.checkCommit()
+
 
 
     def debugOutput(self, summary_of_work):
@@ -121,8 +116,14 @@ class Main():
         Creates an instance of the CheckForCommit class in check_for_pending_commit.py
         :return:
         '''
-        commit_check = check_for_pending_commit.CheckForCommit(host=self.host, key=self.key)
-        commit_check.checkForCommit()
+        check_commit = check_for_pending_commit.CheckForCommit(host=self.host, key=self.key)
+        commit_status = check_commit.checkForCommit()
+        if commit_status == True:
+            changes = check_commit.showPendingChanges()
+            print('Changes are pending commit:')
+            print(json.dumps(changes, indent=2, sort_keys=True))
+        if commit_status == False:
+            print('No changes are pending commit')
 
 
 
@@ -132,5 +133,4 @@ if __name__ == '__main__':
     main = Main()
     # run to see what action to execute
     main.actionSwitch()
-    main.checkCommit()
 
