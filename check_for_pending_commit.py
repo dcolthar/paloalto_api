@@ -1,0 +1,37 @@
+# The purpose of this is to check to see if any pending changes exist
+# if there is a pending commit then probably best to not go forward if doing config changes
+import requests
+import sys
+import xmltodict
+import json
+
+class CheckForCommit():
+
+    def __init__(self, host='127.0.0.1', key=None):
+        # host is the host to connect to
+        self.host = host
+        # We'll never need the username because before calling this the user will have to authenticate
+        # by passing a key or logging in
+        self.key = key
+
+
+    def checkForCommit(self):
+        '''
+        Checks to see if any changes are awaiting commit and returns a True is yes and False if no
+        :return: commit_state - True or False
+        '''
+        if not self.key:
+            print('We don\'t have an API key so the call will fail')
+            sys.exit(1)
+
+        url ='https://{host}/api/?type=op&cmd=<check><pending-changes></pending-changes></check>&key={key}'.format(
+            host=self.host, key=self.key
+        )
+        # lets try to connect now
+        r = requests.get(url, Verify=False)
+        data = r.text
+
+        newdata = json.loads(json.dumps(xmltodict.parse(data)))
+
+        print(newdata)
+

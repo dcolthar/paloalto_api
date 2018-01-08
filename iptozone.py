@@ -1,9 +1,5 @@
 import requests
-import getpass
 import sys
-import argparse
-# Beautiful soup is used to scrape the XML to get values needed
-from bs4 import BeautifulSoup as BS
 # We import xmltodict and json to do some formatting of the output from the calls
 import xmltodict
 import json

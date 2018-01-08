@@ -3,8 +3,11 @@
 import iptozone
 import getsysteminfo
 import authenticate
+import check_for_pending_commit
 import argparse
 import json
+
+
 
 class Main():
 
@@ -101,6 +104,14 @@ class Main():
             results = tozone.testRouteLookup()
             print(json.dumps(results, indent=2, sort_keys=True))
 
+    def checkCommit(self):
+        '''
+        Creates an instance of the CheckForCommit class in check_for_pending_commit.py
+        :return:
+        '''
+        commit_check = check_for_pending_commit.CheckForCommit(host=self.host, key=self.key)
+        commit_check.checkForCommit()
+
 
 
 
@@ -109,3 +120,5 @@ if __name__ == '__main__':
     main = Main()
     # run to see what action to execute
     main.actionSwitch()
+    main.checkCommit()
+
