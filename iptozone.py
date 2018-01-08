@@ -43,7 +43,7 @@ class IPtoZone():
         else:
             # not using a file to read from just using a static list
             iplist = ['10.92.53.39', '10.96.5.19']
-            
+
         # If we don't have the key, no point to continue
         if not self.key:
             print('We don\'t have an API key so the call will fail')
