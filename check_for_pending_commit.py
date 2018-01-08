@@ -39,6 +39,10 @@ class CheckForCommit():
         if newdata['response']['result'] == 'yes':
             commit_state = True
             return commit_state
+
+            # Try to get a summary of the changes that are awaiting commit
+            changes = self.showPendingChanges()
+            print(changes)
         else:
             commit_state = False
             return commit_state
@@ -48,4 +52,11 @@ class CheckForCommit():
         Will return pending changes so if there are changes you can view them
         :return: pending_changes
         '''
-        pass
+        url = 'https://{host}//api/?type=op&cmd=<show><config><list><changes></changes></list></config></show>' \
+              '&key={key}'.format(host=self.host, key=self.key)
+        # lets try to connect now
+        r = requests.get(url, verify=False)
+        data = r.text
+
+        newdata = json.loads(json.dumps(xmltodict.parse(data)))
+        print(newdata)
