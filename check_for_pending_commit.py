@@ -58,4 +58,4 @@ class CheckForCommit():
         data = r.text
 
         newdata = json.loads(json.dumps(xmltodict.parse(data)))
-        print(json.dumps(newdata, indent=2, sort_keys=True)
+        print(json.dumps(newdata, indent=2, sort_keys=True))
