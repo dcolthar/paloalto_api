@@ -33,5 +33,14 @@ class CheckForCommit():
 
         newdata = json.loads(json.dumps(xmltodict.parse(data)))
 
-        print(newdata)
+        #{'response': {'@status': 'success', 'result': 'yes'}}
 
+        print(newdata)
+        print(newdata['response']['result'])
+
+    def showPendingChanges(self):
+        '''
+        Will return pending changes so if there are changes you can view them
+        :return: pending_changes
+        '''
+        pass
