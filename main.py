@@ -87,7 +87,7 @@ class Main():
             print('api key for future use is:\n{key}\n'.format(key=self.key))
 
         # Check if we should look for pending changes
-        if args.checkcommit == 'yes'
+        if args.checkcommit == 'yes':
             check_commit = check_for_pending_commit.CheckForCommit(host=self.host, key=self.key)
             if check_commit == True:
                 changes = check_commit.showPendingChanges()
