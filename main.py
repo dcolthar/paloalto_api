@@ -57,17 +57,6 @@ class Main():
             self.username = 'admin'
             summary_of_work['username'] = 'set username to admin'
 
-        # If a key was used we don't need to prompt for a username and password
-        if args.key:
-            self.key = args.key
-            summary_of_work['key'] = self.key
-        else:
-            auth = authenticate.Authenticate(host=self.host, username=self.username)
-            auth.getCredentials()
-            self.key = auth.getKey()
-            summary_of_work['key'] = 'key was not provided and was gained through username/password auth'
-            print('api key for future use is:\n{key}\n'.format(key=self.key))
-
         # If an action was chosen we assign to self.action otherwise set default to getsysteminfo
         if args.action:
             self.action = args.action
@@ -76,7 +65,24 @@ class Main():
             self.action = 'getsysteminfo'
             summary_of_work['action'] = 'no action passed explicitly so set to getsysteminfo'
 
-        # if debugging, output summary of work
+        # If a key was used we don't need to prompt for a username and password
+        if args.key:
+            self.key = args.key
+            summary_of_work['key'] = self.key
+            # At the end of the work and variables so call debug output method
+            self.debugOutput(summary_of_work)
+        else:
+            summary_of_work['key'] = 'key was not provided and was gained through username/password auth'
+            # We will call this before trying to get key just in case we fail connection then debug
+            # will still output info that is helpful
+            self.debugOutput(summary_of_work)
+            auth = authenticate.Authenticate(host=self.host, username=self.username)
+            auth.getCredentials()
+            self.key = auth.getKey()
+            print('api key for future use is:\n{key}\n'.format(key=self.key))
+
+
+    def debugOutput(self, summary_of_work):
         if self.debug == '1':
             for k, v in summary_of_work.items():
                 print('{key} : {value}'.format(key=k, value=v))
