@@ -23,6 +23,7 @@ class Main():
         parser.add_argument('-r', '--vrouter', help='the virtual router to use for lookup, default is DEFAULT VR')
         parser.add_argument('-a', '--action', help='the action to take', choices=['iptozone', 'getsysteminfo',
                                                                                   'testing'])
+        parser.add_argument('-c', '--checkcommit', help='will check for pending commits', choices=['yes', 'no'])
         args = parser.parse_args()
 
         # summary of work is an output of all the varibles set on the call, to be output if debug=1
@@ -68,6 +69,7 @@ class Main():
             self.action = 'getsysteminfo'
             summary_of_work['action'] = 'no action passed explicitly so set to getsysteminfo'
 
+
         # If a key was used we don't need to prompt for a username and password
         if args.key:
             self.key = args.key
@@ -83,6 +85,16 @@ class Main():
             auth.getCredentials()
             self.key = auth.getKey()
             print('api key for future use is:\n{key}\n'.format(key=self.key))
+
+        # Check if we should look for pending changes
+        if args.checkcommit == 'yes'
+            check_commit = check_for_pending_commit.CheckForCommit(host=self.host, key=self.key)
+            if check_commit == True:
+                changes = check_commit.showPendingChanges()
+                print('Changes are pending commit:')
+                print(json.dumps(changes, indent=2, sort_keys=True))
+            if check_commit == False:
+                print('No changes are pending commit')
 
 
     def debugOutput(self, summary_of_work):

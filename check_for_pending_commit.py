@@ -33,14 +33,10 @@ class CheckForCommit():
 
         newdata = json.loads(json.dumps(xmltodict.parse(data)))
 
-        # Print the result which is a 'yes' if changes are pending
-        print(newdata['response']['result'])
-
+        # Return a boolean of if changes are pending of not
         if newdata['response']['result'] == 'yes':
             commit_state = True
             # Try to get a summary of the changes that are awaiting commit
-            changes = self.showPendingChanges()
-            print(changes)
             return commit_state
         else:
             commit_state = False
@@ -58,4 +54,5 @@ class CheckForCommit():
         data = r.text
 
         newdata = json.loads(json.dumps(xmltodict.parse(data)))
-        print(json.dumps(newdata, indent=2, sort_keys=True))
+
+        return newdata
