@@ -28,7 +28,7 @@ class CheckForCommit():
             host=self.host, key=self.key
         )
         # lets try to connect now
-        r = requests.get(url, Verify=False)
+        r = requests.get(url, verify=False)
         data = r.text
 
         newdata = json.loads(json.dumps(xmltodict.parse(data)))
