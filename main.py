@@ -24,6 +24,7 @@ class Main():
         parser.add_argument('-a', '--action', help='the action to take', choices=['iptozone', 'getsysteminfo',
                                                                                   'testing'])
         parser.add_argument('-c', '--checkcommit', help='will check for pending commits', choices=['yes', 'no'])
+        parser.add_argument('-f', '--ipaddressfile', help='ip address file to use')
         args = parser.parse_args()
 
         # summary of work is an output of all the varibles set on the call, to be output if debug=1
@@ -68,6 +69,13 @@ class Main():
         else:
             self.action = 'getsysteminfo'
             summary_of_work['action'] = 'no action passed explicitly so set to getsysteminfo'
+
+        # If we pass a file of ip addresses set it here, this is used for things like ip to zone lookup, etc
+        if args.ipaddressfile:
+            self.ipaddressfile = args.ipaddressfile
+            summary_of_work['ipaddressfile'] = 'passed an IP address file in, filename is {file}'.format(
+                file=self.ipaddressfile
+            )
 
 
         # If a key was used we don't need to prompt for a username and password

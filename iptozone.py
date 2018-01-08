@@ -3,6 +3,7 @@ import sys
 # We import xmltodict and json to do some formatting of the output from the calls
 import xmltodict
 import json
+import read_file_to_ip_list
 
 
 
@@ -20,6 +21,9 @@ class IPtoZone():
         self.key = kwargs_list['key']
         self.vrouter = kwargs_list['vrouter']
         self.debug = kwargs_list['debug']
+        # if an ip address file was passed in from main.py then we can use that to build a list of ips to lookup
+        if kwargs_list['ipaddressfile']:
+            self.ipaddressfile = kwargs_list['ipaddressfile']
 
 
     def testRouteLookup(self):
@@ -28,8 +32,18 @@ class IPtoZone():
         interface to zone name for the ip
         :return: self.results - a dictionary of all the ip to zone mapping, the ip is the key zone the value
         '''
-        # run against a group of routes to check at once
-        iplist = ['10.92.53.39', '10.96.5.19']
+        # we will leave iplist blank to start
+        iplist = []
+
+        # if we got passed an ip address file in the kwargs then lets use the file
+        if self.ipaddressfile:
+            # create an instance of the read_file_to_ip_list class from the file we imported
+            read_file = read_file_to_ip_list.ReadToIPList(ipaddressfile=self.ipaddressfile)
+            iplist = read_file.doWork()
+        else:
+            # not using a file to read from just using a static list
+            iplist = ['10.92.53.39', '10.96.5.19']
+            
         # If we don't have the key, no point to continue
         if not self.key:
             print('We don\'t have an API key so the call will fail')
